@@ -1,59 +1,30 @@
 # 快速开始 | OmniBox
 
-本指南用于创建第一个 OmniBox 爬虫源。
+> 基于最新官方文档同步：
+> https://omnibox-doc.pages.dev/spider-development/getting-started.html
 
----
+## 创建爬虫源
 
-## 1. 创建爬虫源
+### 1. 进入管理后台
+- 打开 OmniBox 管理后台
+- 进入「爬虫源管理」页面
+- 点击「新建爬虫源」
 
-### 作用
-在 OmniBox 后台创建一个新的自定义视频源脚本。
+### 2. 填写基本信息
+- **名称**：爬虫源显示名称
+- **类型**：JavaScript 或 Python
+- **描述**：可选
 
-### 步骤
-1. 打开 OmniBox 管理后台
-2. 进入“爬虫源管理”页面
-3. 点击“新建爬虫源”
-4. 填写基础信息：
-   - 名称
-   - 类型（JavaScript / Python）
-   - 描述（可选）
+### 3. 创建脚本
+系统支持两种类型：
+- **JavaScript**：适合熟悉 Node.js 的开发者
+- **Python**：适合熟悉 Python 的开发者
 
----
-
-## 2. 语言选择
-
-### JavaScript
-#### 作用
-适合熟悉 Node.js 的开发者。
-
-#### 特点
-- Node.js 运行时
-- 支持 npm 包
-- 使用 `require()`
-- 支持 ES6+
-
-### Python
-#### 作用
-适合熟悉 Python 的开发者。
-
-#### 特点
-- Python 3 运行时
-- 支持 pip 包
-- 推荐配合 `spider_runner.run()`
-
----
-
-## 3. JavaScript 最小示例
-
-### 作用
-演示一个最基础可运行的 JS 爬虫脚本。
-
-### 示例
+## JavaScript 最小示例
 
 ```javascript
 // @name 示例爬虫源
 // @version 1.0.0
-
 const OmniBox = require("omnibox_sdk");
 const runner = require("spider_runner");
 
@@ -74,179 +45,78 @@ async function home(params, context) {
         vod_pic: "https://example.com/pic.jpg",
         type_id: "1",
         type_name: "电影",
+        vod_remarks: "HD",
+        vod_year: "2024",
+        vod_douban_score: "8.5",
+        vod_subtitle: "2024 / 中国大陆 / 剧情",
       },
     ],
+    // filters: { "1": [{ key, name, init, value: [...] }] },
+    // banner: [{ title, subtitle, backgroundImage, genre, actors, description }],
   };
 }
 ```
 
-### 说明
-- `home(params, context)`：获取首页数据
-- `class`：分类列表
-- `list`：推荐视频列表
-- `runner.run(module.exports)`：注册并启动所有 handler
-
----
-
-## 4. Python 最小示例
-
-### 作用
-演示一个最基础可运行的 Python 爬虫脚本。
-
-### 示例
+## Python 最小示例
 
 ```python
 # -*- coding: utf-8 -*-
 # @name 示例爬虫源
 # @version 1.0.0
-
 from spider_runner import OmniBox, run
 
 async def home(params, context):
     await OmniBox.log("info", "获取首页数据")
     return {
-        "class": [{"type_id": "1", "type_name": "电影"}],
-        "list": [{
-            "vod_id": "1",
-            "vod_name": "示例视频",
-            "vod_pic": "https://example.com/pic.jpg",
-            "type_id": "1",
-            "type_name": "电影"
-        }],
+        "class": [
+            {"type_id": "1", "type_name": "电影"},
+            {"type_id": "2", "type_name": "电视剧"},
+        ],
+        "list": [
+            {
+                "vod_id": "1",
+                "vod_name": "示例视频",
+                "vod_pic": "https://example.com/pic.jpg",
+                "type_id": "1",
+                "type_name": "电影",
+                "vod_remarks": "HD",
+                "vod_year": "2024",
+                "vod_douban_score": "8.5",
+            }
+        ],
     }
 
 if __name__ == "__main__":
     run({"home": home})
 ```
 
-### 说明
-- `run({"home": home})`：注册 handler
-- Python 推荐统一使用 `run()`，不要自己写 stdin 解析
+## 五个核心 handler
 
----
+| 方法 | 作用 | 常见返回 |
+|---|---|---|
+| `home` | 首页分类与推荐 | `{ class, list, banner?, filters? }` |
+| `category` | 分类分页列表 | `{ page, pagecount, total, list }` |
+| `detail` | 视频详情 | `{ list }` |
+| `search` | 搜索 | `{ page, pagecount, total, list }` |
+| `play` | 播放信息 | `{ urls, flag, header?, parse?, danmaku? }` |
 
-## 5. 五个核心 handler
+## 重要提醒
 
-### `home(params, context)`
-#### 作用
-返回首页分类与推荐列表。
+- `context` 通过第二个参数获取
+- `play.parse = 1` 仅 **ok影视 app** 真正支持
+- `vod_tag: "folder"` 表示目录项，不是播放项
+- `search: 1` 是 UZ 专用字段，必要时再加
 
-#### 入参
-- `params`：通常为空对象
-- `context`：请求上下文
+## 推荐开发顺序
 
-#### 出参
-```json
-{
-  "class": [],
-  "list": [],
-  "banner": [],
-  "filters": {}
-}
-```
+1. 先做最小可运行脚本
+2. 确认 `home` / `detail` / `play` 路通
+3. 再补 `category` / `search`
+4. 最后补过滤、banner、弹幕、刮削、历史等增强能力
 
-### `category(params, context)`
-#### 作用
-返回指定分类的分页列表。
+## 本地技能建议联读
 
-#### 入参
-- `params.categoryId`
-- `params.page`
-- `params.filters`（可选）
-
-#### 出参
-```json
-{
-  "page": 1,
-  "pagecount": 10,
-  "total": 100,
-  "list": []
-}
-```
-
-### `detail(params, context)`
-#### 作用
-返回视频详情与播放源。
-
-#### 入参
-- `params.videoId`
-
-#### 出参
-```json
-{
-  "list": [
-    {
-      "vod_id": "...",
-      "vod_name": "...",
-      "vod_play_sources": []
-    }
-  ]
-}
-```
-
-### `search(params, context)`
-#### 作用
-根据关键词搜索。
-
-#### 入参
-- `params.keyword`
-- `params.page`（可选）
-
-#### 出参
-```json
-{
-  "page": 1,
-  "pagecount": 1,
-  "total": 1,
-  "list": []
-}
-```
-
-### `play(params, context)`
-#### 作用
-返回播放地址、请求头、弹幕等。
-
-#### 入参
-- `params.playId`
-- `params.flag`（可选）
-
-#### 出参
-推荐格式：
-```json
-{
-  "urls": [{"name": "播放", "url": "https://..."}],
-  "flag": "play",
-  "header": {},
-  "parse": 0,
-  "danmaku": []
-}
-```
-
----
-
-## 6. 推荐开发顺序
-
-### 作用
-降低一次性实现全部功能的复杂度。
-
-### 顺序建议
-1. 先写 `home`
-2. 再写 `category`
-3. 再写 `detail`
-4. 再写 `play`
-5. 最后补 `search`
-
----
-
-## 7. 推送型脚本
-
-### 作用
-适配直接推送链接、网盘链接、资源链接类场景。
-
-### 最低实现要求
-通常只需要：
-- `detail`
-- `play`
-
-### 说明
-这类脚本不一定需要首页、分类、搜索能力。
+- `api-reference.md`
+- `script-annotation-attributes.md`
+- `sdk-api.md`
+- `js-template.md` / `py-template.md`

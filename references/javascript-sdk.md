@@ -1,5 +1,9 @@
 # JavaScript SDK | OmniBox
 
+> 本文件为基于官方统一 `sdk.html` 的 JS 侧展开说明。
+> 若只想先看最新官方同步主入口，优先读：`sdk-api.md`
+
+
 OmniBox JavaScript SDK 提供请求、日志、环境变量、爬虫源数据、网盘、刮削、弹幕、解析站、观看记录等能力。
 
 ## 引入方式

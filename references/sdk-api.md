@@ -1,325 +1,144 @@
 # OmniBox SDK API 速查
 
-这是 JS / Python 的对照速查表，按“作用 / 入参 / 出参 / 示例”整理。
+> 基于最新官方文档同步：
+> https://omnibox-doc.pages.dev/spider-development/sdk.html
 
----
+官方当前将 SDK 说明收拢为统一页面，JavaScript / Python 共享同一套函数名。
 
-## 1. HTTP 请求
+## 引入方式
 
-### JS
-`OmniBox.request(url, options)`
-
-### Python
-`OmniBox.request(url, options)`
-
-### 作用
-发送 HTTP 请求，访问第三方 API 或页面。
-
-### 入参
-| 参数 | 类型 | 说明 |
-|---|---|---|
-| `url` | string / str | 请求地址 |
-| `options.method` | string / str | HTTP 方法 |
-| `options.headers` | object / dict | 请求头 |
-| `options.body` | string\|object / str\|dict | 请求体 |
-
-### 出参
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `statusCode` | number / int | HTTP 状态码 |
-| `headers` | object / dict | 响应头 |
-| `body` | string / str | 响应体 |
-
-### 示例
+### JavaScript
 ```javascript
-const res = await OmniBox.request(url, { method: "GET", headers: {} });
-const data = JSON.parse(res.body || "{}");
+const OmniBox = require("omnibox_sdk");
+const runner = require("spider_runner");
+module.exports = { home, category, detail, search, play };
+runner.run(module.exports);
 ```
+
+### Python
 ```python
-res = await OmniBox.request(url, {"method": "GET", "headers": {}})
-data = json.loads(res.get("body", "{}"))
+from spider_runner import OmniBox, run
+if __name__ == "__main__":
+    run({"home": home, "category": category, "detail": detail, "search": search, "play": play})
 ```
 
 ---
 
-## 2. 日志
+## 基础能力
 
-### JS
-`OmniBox.log(level, message)`
+### `request(url, options)`
+作用：
+- 发送 HTTP 请求
+- 返回 `statusCode / headers / body`
 
-### Python
-`OmniBox.log(level, message)`
-
-### 作用
-记录调试日志。
-
-### 入参
-| 参数 | 类型 | 说明 |
-|---|---|---|
-| `level` | string / str | `info` / `warn` / `error` |
-| `message` | string / str | 日志内容 |
-
-### 出参
-- 无
-
-### 示例
+#### JavaScript
 ```javascript
-await OmniBox.log("info", "开始执行")
+const response = await OmniBox.request("https://api.example.com/data", {
+  method: "GET",
+  headers: { "User-Agent": "Mozilla/5.0" },
+});
+const data = JSON.parse(response.body || "{}");
 ```
+
+#### Python
 ```python
-await OmniBox.log("info", "开始执行")
+import json
+response = await OmniBox.request("https://api.example.com/data", {
+    "method": "GET",
+    "headers": {"User-Agent": "Mozilla/5.0"},
+})
+data = json.loads(response.get("body", "{}"))
 ```
 
----
+### `log(level, message)`
+作用：
+- 输出日志，便于调试与排错
 
-## 3. 环境变量
+### `getEnv(name)`
+作用：
+- 读取环境变量
 
-### JS
-- 推荐：`process.env.KEY`
-- 可选：`await OmniBox.getEnv("KEY")`
-
-### Python
-- 推荐：`os.environ.get("KEY", "")`
-- 可选：`await OmniBox.get_env("KEY")`
-
-### 作用
-读取环境变量配置。
-
-### 入参
-| 参数 | 类型 | 说明 |
-|---|---|---|
-| `name` | string / str | 环境变量名 |
-
-### 出参
-- string / str
+说明：
+- 实战里通常仍推荐直接用：
+  - JS：`process.env.KEY`
+  - Python：`os.environ.get("KEY")`
 
 ---
 
-## 4. 爬虫源标签
+## 爬虫源数据
 
-### JS
-`OmniBox.getSourceFavoriteTags()`
+### `getSourceFavoriteTags()`
+作用：
+- 获取当前源的收藏标签列表
 
-### Python
-`OmniBox.get_source_favorite_tags()`
-
-### 作用
-读取当前源的收藏标签。
-
-### 入参
-- 无（依赖 `context.sourceId`）
-
-### 出参
-- `string[]` / `list[str]`
+### `getSourceCategoryData(categoryType, page, pageSize)`
+作用：
+- 获取当前源的历史 / 收藏 / 标签分页数据
 
 ---
 
-## 5. 爬虫源分类数据
+## 网盘能力
 
-### JS
-`OmniBox.getSourceCategoryData(type, page, pageSize)`
+### `getDriveFileList(shareURL, pdirFid)`
+作用：
+- 获取分享目录下的文件列表
 
-### Python
-`OmniBox.get_source_category_data(type, page, page_size)`
+### `getDriveVideoPlayInfo(shareURL, fid, flag)`
+作用：
+- 获取可播放地址
 
-### 作用
-读取当前源的历史、收藏、标签分类数据。
+### `getDriveInfoByShareURL(shareURL)`
+作用：
+- 识别网盘类型与显示名称
 
-### 入参
-| 参数 | 说明 |
-|---|---|
-| `type` | `history` / `favorite` / `tag` |
-| `page` | 页码 |
-| `pageSize/page_size` | 每页数量 |
-
-### 出参
-| 字段 | 说明 |
-|---|---|
-| `list` | 数据列表 |
-| `total` | 总数 |
-| `pageCount` | 总页数 |
+### `getDriveShareInfo(shareURL)`
+作用：
+- 获取分享信息（类型、token 等）
 
 ---
 
-## 6. 网盘文件列表
+## 刮削能力
 
-### JS
-`getDriveFileList(shareURL, pdirFid="0")`
+### `processScraping(videoId, keyword, resourceName, videoFiles)`
+作用：
+- 执行刮削任务并保存结果
 
-### Python
-`get_drive_file_list(share_url, pdir_fid="0")`
-
-### 作用
-获取网盘文件列表。
-
-### 入参
-- 分享链接
-- 父目录 ID
-
-### 出参
-- `{ files, total, has_more }`
+### `getScrapeMetadata(videoId)`
+作用：
+- 获取刮削后的元数据，如 `scrapeData`、`videoMappings`
 
 ---
 
-## 7. 网盘视频播放信息
+## 播放辅助
 
-### JS
-`getDriveVideoPlayInfo(shareURL, fid, flag?)`
+### `sniffVideo(url, headers)`
+作用：
+- 嗅探页面中的真实视频地址
 
-### Python
-`get_drive_video_play_info(share_url, fid, flag="")`
+说明：
+- 依赖完整版运行环境
+- 如果已知真实播放页，可优先交给它
+- 但它也可能受运行环境 bug 影响，不能盲目当唯一方案
 
-### 作用
-获取网盘视频播放地址与请求头。
+### `getMediaInfo(url, headers)`
+作用：
+- 探测媒体信息
 
-### 入参
-- 分享链接
-- 文件 ID
-- 播放方式标识
+### `getDanmakuByFileName(fileName)`
+作用：
+- 根据文件名匹配弹幕
 
-### 出参
-- `{ url, header, danmaku }`
+### `getAnalyzeSites()`
+作用：
+- 获取已配置解析站列表
 
----
-
-## 8. 网盘信息识别
-
-### JS
-`getDriveInfoByShareURL(shareURL)`
-
-### Python
-`get_drive_info_by_share_url(share_url)`
-
-### 作用
-识别网盘类型、名称、图标。
-
-### 出参
-- `{ driveType, displayName, iconPath, iconUrl }`
+### `addPlayHistory(data)`
+作用：
+- 记录观看历史
 
 ---
 
-## 9. 刮削
+## 当前同步后的理解
 
-### JS
-- `processScraping(resourceId, keyword, resourceName, videoFiles)`
-- `getScrapeMetadata(resourceId)`
-
-### Python
-- `process_scraping(resource_id, keyword, resource_name, video_files)`
-- `get_scrape_metadata(resource_id)`
-
-### 作用
-执行刮削并读取刮削元数据。
-
-### 入参
-- `resourceId/resource_id`
-- `keyword`
-- `resourceName/resource_name`
-- `videoFiles/video_files`
-
-### 出参
-- 刮削结果对象
-- metadata 通常含 `scrapeData`, `videoMappings`
-
----
-
-## 10. 视频嗅探
-
-### JS
-`sniffVideo(url, headers?)`
-
-### Python
-`sniff_video(url, headers=None)`
-
-### 作用
-在播放页中捕获真实视频地址。
-
-### 入参
-- URL
-- 请求头（可选）
-
-### 出参
-- `{ url, header }`
-
-### 注意
-- 需要完整版运行环境（Playwright / Chromium）
-
----
-
-## 11. 弹幕
-
-### JS
-`getDanmakuByFileName(fileName)`
-
-### Python
-`get_danmaku_by_file_name(file_name)`
-
-### 作用
-按文件名匹配弹幕源。
-
-### 出参
-- `[{ name, url }]`
-
----
-
-## 12. 解析站
-
-### JS
-`getAnalyzeSites()`
-
-### Python
-`get_analyze_sites()`
-
-### 作用
-获取解析站配置。
-
-### 出参
-- `[{ name, url, type }]`
-- `type: 0=Web, 1=JSON`
-
----
-
-## 13. 观看记录
-
-### JS
-`addPlayHistory(historyItem)`
-
-### Python
-`add_play_history(...)`
-
-### 作用
-写入观看记录。
-
-### 常见入参
-- 视频 ID
-- 标题
-- 剧集 ID
-- 封面
-- 剧集名称
-- 播放地址
-- 请求头
-- 总时长
-
-### 出参
-- `boolean / bool`
-
----
-
-## 14. Python 专有加密工具
-
-### `aes_encrypt(data, key)`
-作用：AES 加密
-
-### `aes_decrypt(encrypted, key)`
-作用：AES 解密
-
-### `md5(data)`
-作用：计算 MD5
-
-### `base64_encode(data)`
-作用：Base64 编码
-
-### `base64_decode(encoded)`
-作用：Base64 解码
-
-这些在需要签名、加密参数、对接特殊接口时很有用。
+- 官方当前不再拆成 JS SDK / Python SDK 两个主文档页面，而是统一在 `sdk.html` 里对照说明。
+- 技能内部保留 JS / Python 参考文件可以继续用，但默认应优先把 `sdk-api.md` 视为官方同步主入口。

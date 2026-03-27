@@ -1,71 +1,123 @@
 # API 参考 | OmniBox
 
-## 方法总览
+> 基于最新官方文档同步：
+> https://omnibox-doc.pages.dev/spider-development/api-reference.html
 
-所有 handler 推荐签名统一为：`(params, context)`
+## 接口概览
 
-| 方法 | 作用 | params | 返回 |
+爬虫源**按需实现** 5 个方法：
+
+| 方法 | 说明 | params 主要字段 | 返回值 |
 |---|---|---|---|
-| `home` | 首页分类与推荐 | `{}` | `{ class, list, banner?, filters? }` |
-| `category` | 分类分页列表 | `{ categoryId, page, filters? }` | `{ page, pagecount, total, list }` |
-| `detail` | 视频详情 | `{ videoId }` | `{ list }` |
-| `search` | 搜索结果 | `{ keyword, page?, quick? }` | `{ page, pagecount, total, list }` |
-| `play` | 播放信息 | `{ playId, flag? }` | `{ urls, flag, header?, parse?, danmaku? }` |
+| `home` | 获取首页数据 | `{}` | 分类列表与推荐视频 |
+| `category` | 获取分类数据 | `{ categoryId, page, filters? }` | 分页视频列表 |
+| `detail` | 获取视频详情 | `{ videoId }` | 视频详情信息 |
+| `search` | 搜索视频 | `{ keyword, page?, quick? }` | 搜索结果列表 |
+| `play` | 获取播放地址 | `{ playId, flag? }` | 播放地址信息 |
 
-## context
+推荐签名统一为：
+```js
+(params, context)
+```
+
+## 请求上下文 `context`
 
 ```ts
 interface RequestContext {
   baseURL?: string;
   headers?: Record<string, string>;
   sourceId?: string;
-  from?: string; // web | tvbox | uz | catvod | emby
+  from?: string; // web(default) | tvbox | uz | catvod | emby
 }
 ```
 
-## `home`
-返回：首页分类和推荐列表。
+说明：
+- `baseURL`：拼装绝对链接时可用
+- `headers`：客户端请求头，可透传到第三方接口
+- `sourceId`：当前爬虫源 ID
+- `from`：调用端，未传时默认为 `web`
 
-### 主要字段
-- `class`: `{ type_id, type_name }[]`
-- `list`: `VodItem[]`
-- `filters?`
-- `banner?`
+调用端标识统一从 `context.from` 获取，不通过 `params` 传。
+
+---
+
+## `home`
+
+作用：
+- 返回首页分类与推荐列表
+
+返回结构：
+```ts
+{
+  class: Array<{ type_id: string; type_name: string }>;
+  list: VodItem[];
+  filters?: Record<string, any[]>;
+  banner?: BannerItem[];
+}
+```
+
+备注：
+- `filters`：可选，按分类 ID 提供筛选器
+- `banner`：可选，首页轮播数据
+
+---
 
 ## `category`
-### params
-- `categoryId` string
-- `page` number
-- `filters` object
 
-### 返回
-- `page`
-- `pagecount`
-- `total`
-- `list`
+入参：
+- `categoryId: string`
+- `page: number`
+- `filters?: object`
+
+返回：
+```ts
+{
+  page: number;
+  pagecount: number;
+  total: number;
+  list: VodItem[];
+}
+```
+
+---
 
 ## `detail`
-### params
-- `videoId` string
 
-### 返回关键字段
-- `vod_content`
-- `vod_actor`
-- `vod_director`
-- `vod_area`
-- `vod_year`
-- `vod_remarks`
-- `vod_douban_score`
-- `type_name`
-- `vod_play_sources`
+入参：
+- `videoId: string`
 
-### `vod_play_sources`
+返回：
+```ts
+{
+  list: [
+    {
+      vod_id: string;
+      vod_name: string;
+      vod_pic: string;
+      vod_content?: string;
+      vod_director?: string;
+      vod_actor?: string;
+      vod_area?: string;
+      vod_year?: string;
+      vod_remarks?: string;
+      vod_douban_score?: string;
+      type_name?: string;
+      vod_play_sources?: PlaySource[];
+    }
+  ]
+}
+```
+
+### `PlaySource`
 ```ts
 interface PlaySource {
   name: string;
   episodes: Episode[];
 }
+```
 
+### `Episode`
+```ts
 interface Episode {
   name: string;
   playId: string;
@@ -79,25 +131,42 @@ interface Episode {
 }
 ```
 
-### 刮削元数据
-可通过 `OmniBox.getScrapeMetadata(resourceId)` 获取 `videoMappings`，把 TMDB 信息映射到 episode。
+说明：
+- TMDB 剧集信息可从刮削元数据里补充
+- 常规详情页推荐返回 `vod_play_sources`
+
+---
 
 ## `search`
-### params
+
+入参：
 - `keyword`
 - `page?`
 - `quick?`
 
-### 返回
-- `page`
-- `pagecount`
-- `total`
-- `list`
+返回：
+```ts
+{
+  page: number;
+  pagecount: number;
+  total: number;
+  list: VodItem[];
+}
+```
 
-提示：UZ 客户端支持 `search: 1`。
+备注：
+- `quick` 用于快速搜索场景
+- UZ 端支持 `search: 1` 这类专用行为字段
+
+---
 
 ## `play`
-### 推荐返回格式
+
+入参：
+- `playId`
+- `flag?`
+
+推荐返回格式：
 ```ts
 {
   urls: Array<{ name: string; url: string }>;
@@ -109,16 +178,20 @@ interface Episode {
 ```
 
 ### `parse`
-- `0`：直链（m3u8/mp4）
-- `1`：需客户端嗅探
+- `0`：直链（m3u8 / mp4 等）
+- `1`：需要客户端嗅探
 
-注意：`parse=1` 仅 **ok影视 app** 真正支持，其他端通常忽略。
+注意：
+- `parse = 1` **仅 ok影视 app 有效**
+- 其他客户端通常忽略该字段
 
 ### 兼容格式
 也兼容：
 - `url: string`
 - `url: string[]`
 - `url: { values, position }`
+
+---
 
 ## 数据模型
 
@@ -139,9 +212,9 @@ interface Episode {
 }
 ```
 
-#### 特殊字段
-- `vod_tag: "folder"`：目录项，点击进入子目录
-- `search: 1`：UZ 专用，点击触发搜索
+特殊字段：
+- `vod_tag: "folder"`：目录项，点击进入子目录而不是播放页
+- `search: 1`：UZ 专用，点击时执行搜索
 
 ### `BannerItem`
 ```ts
@@ -154,9 +227,3 @@ interface Episode {
   description?: string;
 }
 ```
-
-## 经验规则
-
-- 常规影视源建议实现全部 5 个方法
-- 推送型源通常只实现 `detail` 和 `play`
-- 所有端差异逻辑统一看 `context.from`
