@@ -1,7 +1,7 @@
 # 爬虫开发介绍 | OmniBox
 
 > 基于最新官方文档同步：
-> https://omnibox-doc.pages.dev/spider-development/introduction.html
+> https://omnibox-doc.pages.dev/spider-development/introduction
 
 ## 概览
 
@@ -62,6 +62,9 @@ OmniBox 支持通过自定义爬虫脚本扩展视频源。可以使用：
 ```js
 async function home(params, context) {
   const from = context?.from || 'web';
+  const baseURL = context?.baseURL || '';
+  const headers = context?.headers || {};
+  const sourceId = context?.sourceId || '';
 }
 ```
 
@@ -69,6 +72,9 @@ async function home(params, context) {
 ```python
 async def home(params, context):
     from_val = (context or {}).get("from", "web")
+    base_url = (context or {}).get("baseURL", "")
+    headers = (context or {}).get("headers", {})
+    source_id = (context or {}).get("sourceId", "")
 ```
 
 ## 脚本注释属性
@@ -111,6 +117,12 @@ from spider_runner import OmniBox, run
 - `sdk`
 
 后续同步官方文档时，优先按这 5 个页面校准。
+
+另外，官方现在在 `getting-started / api-reference` 里也更明确写出了：
+- `home()` 可选返回 `filters / banner`
+- `category()` / `search()` 推荐返回 `total`
+- `search: 1` 是 UZ 专用字段
+- `vod_tag: "folder"` 是目录项
 
 ## 开发流程建议
 

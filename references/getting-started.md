@@ -1,7 +1,7 @@
 # 快速开始 | OmniBox
 
 > 基于最新官方文档同步：
-> https://omnibox-doc.pages.dev/spider-development/getting-started.html
+> https://omnibox-doc.pages.dev/spider-development/getting-started
 
 ## 创建爬虫源
 
@@ -102,7 +102,12 @@ if __name__ == "__main__":
 
 ## 重要提醒
 
-- `context` 通过第二个参数获取
+- `context` 通过第二个参数获取，且不只是 `from`，还包括：
+  - `baseURL`
+  - `headers`
+  - `sourceId`
+- `home()` 现在可选返回 `filters` 与 `banner`
+- `category()` / `search()` 返回里建议尽量补 `total`
 - `play.parse = 1` 仅 **ok影视 app** 真正支持
 - `vod_tag: "folder"` 表示目录项，不是播放项
 - `search: 1` 是 UZ 专用字段，必要时再加

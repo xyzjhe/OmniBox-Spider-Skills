@@ -1,6 +1,6 @@
 # JavaScript SDK | OmniBox
 
-> 本文件为基于官方统一 `sdk.html` 的 JS 侧展开说明。
+> 本文件为基于官方统一 `sdk` 页的 JS 侧展开说明。
 > 若只想先看最新官方同步主入口，优先读：`sdk-api.md`
 
 

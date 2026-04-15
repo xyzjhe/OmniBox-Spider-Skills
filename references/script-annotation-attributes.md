@@ -1,7 +1,7 @@
 # 脚本注释属性 | OmniBox
 
 > 基于最新官方文档同步：
-> https://omnibox-doc.pages.dev/spider-development/script-annotation-attributes.html
+> https://omnibox-doc.pages.dev/spider-development/script-annotation-attributes
 
 ## 重要前提
 

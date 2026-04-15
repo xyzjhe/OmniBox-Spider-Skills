@@ -8,7 +8,7 @@ description: |-
 
 > skill_meta
 > - last_updated: 2026-04-15 13:12 Asia/Shanghai
-> - source_docs: https://omnibox-doc.pages.dev/spider-development/introduction.html
+> - source_docs: https://omnibox-doc.pages.dev/spider-development/introduction
 > - source_scope: introduction + getting-started + script-annotation-attributes + api-reference + sdk + repo env scan
 > - sync_note: 每次改动后如需分发，应重新打包 skill 文件
 
@@ -46,16 +46,22 @@ description: |-
 
 - 推送型脚本：通常只实现 `detail` + `play`
 - 常规影视源：建议实现全部 5 个
+- 另外要记住：官方现在明确 `home()` 还可以返回 `filters` 与 `banner`，不是只有 `class + list`
 
-### 3) 端差异逻辑统一看 `context.from`
-`context.from` 可能是：
-- `web`（默认）
-- `tvbox`
-- `uz`
-- `catvod`
-- `emby`
+### 3) `context` 不只看 `from`，还要知道另外 3 个字段什么时候该用
+`context` 里当前官方明确写到：
+- `baseURL`
+- `headers`
+- `sourceId`
+- `from`
 
-如果网页端、TV 端、UZ 端行为不同，统一从这里分支。
+其中最常用的是：
+- `from`：端差异分支（`web` / `tvbox` / `uz` / `catvod` / `emby`）
+- `headers`：需要透传客户端 UA / Cookie 时使用
+- `baseURL`：需要拼绝对链接时使用
+- `sourceId`：涉及源内数据能力（如历史 / 收藏 / 标签页）时要知道它会被 SDK 读取
+
+如果网页端、TV 端、UZ 端行为不同，统一从 `context.from` 分支；如果要拼链接、透传请求头、调用源内数据页，再分别考虑 `baseURL / headers / sourceId`。
 
 ### 4) `play` 优先返回推荐格式
 优先：
@@ -267,6 +273,11 @@ description: |-
 ## 重要提醒
 
 - 官方最新文档在爬虫开发部分已收拢为：`introduction / getting-started / script-annotation-attributes / api-reference / sdk`，后续同步时优先按这 5 个页面校准。
+- `home()` 官方现在明确可选返回：
+  - `filters`
+  - `banner`
+  写首页型源时别把它误以为只有 `class + list`。
+- `category()` / `search()` 推荐返回里除了 `page / pagecount / list`，还应尽量补 `total`。
 - 环境变量：
   - JS 优先 `process.env.KEY`
   - Python 优先 `os.environ.get("KEY")`

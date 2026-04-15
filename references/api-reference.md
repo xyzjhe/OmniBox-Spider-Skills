@@ -1,7 +1,7 @@
 # API 参考 | OmniBox
 
 > 基于最新官方文档同步：
-> https://omnibox-doc.pages.dev/spider-development/api-reference.html
+> https://omnibox-doc.pages.dev/spider-development/api-reference
 
 ## 接口概览
 
@@ -34,7 +34,7 @@ interface RequestContext {
 说明：
 - `baseURL`：拼装绝对链接时可用
 - `headers`：客户端请求头，可透传到第三方接口
-- `sourceId`：当前爬虫源 ID
+- `sourceId`：当前爬虫源 ID；调用源内数据能力（如 `getSourceCategoryData`、`addPlayHistory`）时要知道 SDK 会读取它
 - `from`：调用端，未传时默认为 `web`
 
 调用端标识统一从 `context.from` 获取，不通过 `params` 传。
@@ -59,6 +59,7 @@ interface RequestContext {
 备注：
 - `filters`：可选，按分类 ID 提供筛选器
 - `banner`：可选，首页轮播数据
+- 换句话说，`home()` 不只是 `class + list`，首页型源还应考虑是否需要 `filters / banner`
 
 ---
 
@@ -157,6 +158,7 @@ interface Episode {
 备注：
 - `quick` 用于快速搜索场景
 - UZ 端支持 `search: 1` 这类专用行为字段
+- 如果有 `total`，建议与 `page / pagecount / list` 一起返回，别只返回分页号和列表
 
 ---
 
