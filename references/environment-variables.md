@@ -43,6 +43,13 @@
 - 是否必填
 - 示例值（如适合）
 
+### 5. 先确认是否真的需要新环境变量
+遇到“播放历史 / 收藏 / 追剧 / 收藏标签页”这类需求时，先确认是否可直接使用新版 SDK：
+- `getSourceFavoriteTags()`
+- `getSourceCategoryData("history" | "favorite" | "follow" | 标签名, page, pageSize)`
+
+这类能力优先走 SDK，不要下意识新造本地存储环境变量或额外接口配置。
+
 ---
 
 ## 已扫描出的环境变量索引

@@ -7,7 +7,7 @@ description: |-
 # OmniBox Spider Skill
 
 > skill_meta
-> - last_updated: 2026-03-27 13:26 Asia/Shanghai
+> - last_updated: 2026-04-15 13:12 Asia/Shanghai
 > - source_docs: https://omnibox-doc.pages.dev/spider-development/introduction.html
 > - source_scope: introduction + getting-started + script-annotation-attributes + api-reference + sdk + repo env scan
 > - sync_note: 每次改动后如需分发，应重新打包 skill 文件
@@ -169,6 +169,26 @@ description: |-
   - 在详情页里补媒体信息
 - 不建议在搜索阶段大规模调用，否则很容易拖慢首屏返回。
 
+### 15) 新版 SDK 现在明确支持“源内数据页 + 全站追剧”
+- 官方文档现已明确：`getSourceFavoriteTags()` 可读取当前源收藏标签；`getSourceCategoryData(categoryType, page, pageSize)` 可读取源内分类数据。
+- `getSourceCategoryData()` 当前官方写明支持：
+  - `history`：当前源播放历史
+  - `favorite`：当前源收藏
+  - `follow`：**全站追剧（与当前源无关）**
+  - 以及其它收藏标签名（可先 `getSourceFavoriteTags()`）
+- 如果用户要做“播放历史 / 收藏 / 追剧 / 收藏标签页”，优先考虑直接复用这组 SDK，而不是手搓本地存储或自造接口。
+
+### 16) 最新 SDK 文档下，优先把 `sdk-api.md` 当主入口，不再假设 JS / Python 页面分裂演进
+- 官方当前 `sdk` 页已是统一入口，JavaScript / Python 共用同一套函数名。
+- 以后回答 OmniBox SDK 问题时，默认优先同步：
+  - `request / log / getEnv`
+  - `getSourceFavoriteTags / getSourceCategoryData`
+  - `getDriveFileList / getDriveVideoPlayInfo / getDriveInfoByShareURL / getDriveShareInfo`
+  - `processScraping / getScrapeMetadata`
+  - `sniffVideo / getVideoMediaInfo / getDanmakuByFileName / getAnalyzeSites / addPlayHistory`
+  - `getCache / setCache / deleteCache`
+- 若旧经验与新文档冲突，优先以最新官方 `sdk` 页为准，再做实测验证。
+
 ## 常见开发策略
 
 ### 普通采集站
@@ -208,6 +228,8 @@ description: |-
 ### 需要统一查看官方 SDK 能力（推荐）
 读：
 - `references/sdk-api.md`
+
+如果用户明确问“最新 SDK 有没有新增什么”“文档里现在支持哪些能力”“follow / 收藏标签 / 缓存 / 媒体信息怎么用”，先优先读 `references/sdk-api.md`。
 
 ### 写 JavaScript 爬虫
 读：

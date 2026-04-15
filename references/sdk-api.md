@@ -1,7 +1,9 @@
 # OmniBox SDK API 速查
 
 > 基于最新官方文档同步：
-> https://omnibox-doc.pages.dev/spider-development/sdk.html
+> https://omnibox-doc.pages.dev/spider-development/sdk
+>
+> 本页已按 2026-04-15 再同步一轮，重点补充：`getSourceCategoryData(..., "follow", ...)`、`getVideoMediaInfo`、`addPlayHistory`、缓存能力等新版文档已明确写出的 SDK 能力。
 
 官方当前将 SDK 说明收拢为统一页面，JavaScript / Python 共享同一套函数名。
 
@@ -74,6 +76,18 @@ data = json.loads(response.get("body", "{}"))
 ### `getSourceCategoryData(categoryType, page, pageSize)`
 作用：
 - 获取当前源的历史 / 收藏 / 标签分页数据
+- 官方当前已明确支持：
+  - `history`：当前源播放历史
+  - `favorite`：当前源收藏
+  - `follow`：**全站追剧（与当前源无关）**
+  - 其它收藏标签名（可先 `getSourceFavoriteTags()`）
+
+示例：
+```javascript
+const historyData = await OmniBox.getSourceCategoryData("history", 1, 20);
+const favoriteData = await OmniBox.getSourceCategoryData("favorite", 1, 20);
+const followData = await OmniBox.getSourceCategoryData("follow", 1, 20);
+```
 
 ---
 
@@ -148,6 +162,16 @@ data = json.loads(response.get("body", "{}"))
 - 记录观看历史
 - 官方文档示例中可配合 `getVideoMediaInfo()` 拿到的时长写入 `totalDuration`
 
+当前官方文档明确写到：
+- 必填：`vodId`、`title`、`episode`
+- 可选：`pic`、`episodeNumber`、`episodeName`、`totalDuration`
+
+建议：
+- 有封面时一起传 `pic`
+- 已知集号时传 `episodeNumber`
+- 已知集名时传 `episodeName`
+- 若已拿到真实播放地址，再用 `getVideoMediaInfo()` 回填 `totalDuration`
+
 ---
 
 ## 缓存能力 ✅
@@ -177,5 +201,11 @@ data = json.loads(response.get("body", "{}"))
 
 ## 当前同步后的理解
 
-- 官方当前不再拆成 JS SDK / Python SDK 两个主文档页面，而是统一在 `sdk.html` 里对照说明。
+- 官方当前不再拆成 JS SDK / Python SDK 两个主文档页面，而是统一在 `sdk` 页里对照说明。
 - 技能内部保留 JS / Python 参考文件可以继续用，但默认应优先把 `sdk-api.md` 视为官方同步主入口。
+- 新版文档里，除了传统的请求 / 网盘 / 刮削能力外，以下几类能力已经值得默认纳入写源思路：
+  - **源内数据页**：`getSourceFavoriteTags`、`getSourceCategoryData`
+  - **全站追剧**：`getSourceCategoryData("follow", ...)`
+  - **播放增强**：`getVideoMediaInfo`、`addPlayHistory`
+  - **缓存**：`getCache`、`setCache`、`deleteCache`
+- 如果用户问“最新 SDK 多了什么”，优先从上面这几块回答，不要只停留在旧版的 `request / getDriveFileList / processScraping`。
